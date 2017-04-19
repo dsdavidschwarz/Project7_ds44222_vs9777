@@ -4,7 +4,7 @@ import java.net.*;
 import java.util.ArrayList;
 import java.io.*;
 
-public class Server implements Runnable{
+public class Server {
 	private ServerSocket server;
 	private ArrayList<Client> clientList;
 	
