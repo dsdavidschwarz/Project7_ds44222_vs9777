@@ -46,7 +46,7 @@ public class Server {
 		}
 	}
 	
-	public synchronized void send(ArrayList<Integer> ID, String input) {
+	public synchronized void handle(ArrayList<Integer> ID, String input) {
 		for (Integer i : ID) {
 			Client c = getClient(i);
 			if (c != null) c.send(input);
