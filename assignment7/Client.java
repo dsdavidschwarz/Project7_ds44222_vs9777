@@ -7,14 +7,13 @@ import java.io.*;
 public class Client implements Runnable{
 	private Server server;
 	private Socket socket;
-	private int ID;
 	private BufferedReader console;
 	private DataOutputStream out;
 	private ClientThread clientThread;
 	private boolean stop = false;
 	
 	//Self initialized constructor
-	public Client(String serverName, int serverPort) {
+	public Client(InetAddress serverName, int serverPort) {
 		try {
 			System.out.println("Establishing connection. Please wait ...");
 			socket = new Socket(serverName, serverPort);
@@ -32,12 +31,10 @@ public class Client implements Runnable{
 	//Server side constructor with known socket
 	public Client(Socket socket){
 		this.socket = socket;
-		ID = 1;
 	}
 	
 	//Server side constructor with unknown socket
 	public Client() {
-		ID = 1;
 	}
 	
 	public void setSocket(Socket socket) {
@@ -45,7 +42,7 @@ public class Client implements Runnable{
 	}
 	
 	public int getID() {
-		return ID;
+		return (int) clientThread.getId();
 	}
 	@Override
 	public void run(){
@@ -71,7 +68,7 @@ public class Client implements Runnable{
 			out.flush();
 		}
 		catch(IOException e) {
-			server.remove(ID);
+			server.remove((int) clientThread.getId());
 			stop();
 		}
 	}
@@ -106,6 +103,6 @@ public class Client implements Runnable{
 	}
 	
 	public static void main(String args[]) {
-		new Client(args[0], Integer.parseInt(args[1]));
+		//new Client("0.0.0.0/0.0.0.0", 80);
 	}
 }

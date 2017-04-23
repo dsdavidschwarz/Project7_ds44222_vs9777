@@ -17,6 +17,7 @@ public class ServerThread extends Thread {
 	   this.server = server;
 	   this.socket = socket;
 	   ID = socket.getPort();
+	   start();
 	}
 	
 	public void send(String msg) {

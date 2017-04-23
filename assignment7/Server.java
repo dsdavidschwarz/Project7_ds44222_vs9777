@@ -7,12 +7,15 @@ import java.io.*;
 public class Server {
 	private ServerSocket server;
 	private ArrayList<Client> clientList;
+	private ServerThread serverThread;
 	
 	public Server(int port) {
 		try {
 			System.out.println("initializing server to port: " + port + "");
 			server = new ServerSocket(port);
 			System.out.println("Server created!");
+			System.out.println(getAddr().toString());
+			serverThread = new ServerThread(this, server.accept());
 			}
 		catch (Exception e) {
 			System.out.println("Failed to start server");
@@ -26,10 +29,10 @@ public class Server {
 	public void addThread() {
 		Client c;
 		try {
-			c = new Client(server.accept());
+			c = new Client(server.getInetAddress(), server.getLocalPort());
 			clientList.add(c);
 			c.open();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			System.out.println("Server failed to accept client");
 			e.printStackTrace();
 		}
@@ -64,6 +67,12 @@ public class Server {
 		return null;
 	}
 	
+	public InetAddress getAddr() {
+		return server.getInetAddress();
+	}
 	
-}
+	public static void main(String args[]) {
+		Server s = new Server(153);
+		s.addThread();
+	}}
 
