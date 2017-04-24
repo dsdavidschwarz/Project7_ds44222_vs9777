@@ -9,7 +9,7 @@ public class ClientThread extends Thread{
 	private DataInputStream streamIn;
 	private boolean stop = false;
 
-	public ClientThread(Client client, Socket socket) {
+	public ClientThread(Client client,Socket socket) {
 		this.client   = client;
 		this.socket   = socket;
 		open();  
