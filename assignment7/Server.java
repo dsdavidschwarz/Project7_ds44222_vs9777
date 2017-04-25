@@ -26,7 +26,7 @@ public class Server {
 		}
 		while (true) {
 			try {
-				threads.add(new ServerThread(serverSocket.accept()));
+				threads.add(new ServerThread(serverSocket.accept(), threads));
 			} catch (IOException e) {
 				System.out.println(e);
 			}
