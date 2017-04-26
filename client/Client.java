@@ -4,9 +4,9 @@ import java.net.*;
 import java.util.ArrayList;
 import java.io.*;
 
-public class Client implements Runnable{
+public class Client extends Thread{
 	private Socket socket;
-	private BufferedReader is;
+	private DataInputStream is;
 	private PrintStream os;
 	private BufferedReader clientInput;
 	private PrintStream clientOutput;
@@ -18,8 +18,11 @@ public class Client implements Runnable{
 	public Client(String host, int port) {
 		try {
 			socket = new Socket(host, port);
+			if (socket.isConnected()) System.out.println("connected!");
+			else return;
 			os = new PrintStream(socket.getOutputStream());
-			is = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			os.flush();
+			is = new DataInputStream(socket.getInputStream());
 			clientInput = new BufferedReader(new InputStreamReader(System.in));
 			clientOutput = System.out;
 		} catch (Exception e) {
@@ -48,6 +51,8 @@ public class Client implements Runnable{
 	}
 	
 	public static void main(String[] args) {
-		new Thread(new Client("localhost", 2222)).start();
+		Client client = new Client("localhost", 9001);
+		client.start();
+		while (true) {}
 	}
 }

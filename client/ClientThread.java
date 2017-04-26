@@ -4,10 +4,10 @@ import java.io.*;
 
 public class ClientThread extends Thread {
 	private PrintStream clientOutput = null;
-	private BufferedReader is = null;
+	private DataInputStream is;
 	private boolean connected = true;
 	
-	public ClientThread(PrintStream outputLine, BufferedReader is) {
+	public ClientThread(PrintStream outputLine, DataInputStream is) {
 		this.clientOutput = outputLine;
 		this.is = is;
 	}
@@ -16,7 +16,8 @@ public class ClientThread extends Thread {
 	public void run() {
 		try {
 			while (connected) {
-				clientOutput.println(process(is.readLine()));
+				String line = is.readLine();
+				if (line != null) clientOutput.println(process(line));
 			}
 		} catch (IOException e) {
 			System.err.println("IOException:  " + e);
