@@ -13,7 +13,8 @@ public class Server {
 	private static HashSet<ServerThread> threads;
 	
 	public static void main(String args[]) {
-		int portNumber = 2222;
+		threads = new HashSet<ServerThread>();
+		int portNumber = 9001;
 		if (args.length < 1) {
 			System.out.println("Usage: java MultiThreadChatServerSync <portNumber>\n" + "Now using port number=" + portNumber);
 		} else {
@@ -26,7 +27,9 @@ public class Server {
 		}
 		while (true) {
 			try {
-				threads.add(new ServerThread(serverSocket.accept(), threads));
+				ServerThread thread = new ServerThread(serverSocket.accept(), threads);
+				threads.add(thread);
+				thread.start();
 			} catch (IOException e) {
 				System.out.println(e);
 			}

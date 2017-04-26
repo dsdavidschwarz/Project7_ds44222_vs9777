@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 class ServerThread extends Thread {
 	private String name = null;
-	private BufferedReader is = null;
+	private BufferedReader is;
 	private PrintStream os = null;
 	private Socket clientSocket = null;
 	private HashSet<ServerThread> threads;
@@ -23,16 +23,21 @@ class ServerThread extends Thread {
 
 	public void run() {
 		try {
-			is = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			os = new PrintStream(clientSocket.getOutputStream());
+			os.flush();
+			
+			is = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+			
+
 			
 			//Configure user name
 			synchronized(this) {
 				boolean validname = false;
 				boolean uniquename = true;
 				os.println("Enter your name, your name should not contain an @ or /");
-				while (!validname && !uniquename) {
-					name = is.readLine().trim();
+				while (!validname) {
+					name = is.readLine();
+					if (name.equals("null")) continue;
 					if (name.indexOf('@') == -1 && name.indexOf('/') == -1) {
 						validname = true;
 						for (ServerThread thread: threads) {
