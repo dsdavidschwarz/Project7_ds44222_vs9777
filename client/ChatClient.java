@@ -23,10 +23,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Text;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.beans.binding.Bindings;
@@ -59,6 +62,7 @@ public class ChatClient extends Application {
 	private double WINDOW_WIDTH;
 	private double WINDOW_HEIGHT;
 	private Rectangle2D primaryScreenDimensions;
+	Scene chatwindow;
 	
 	private GridPane grid;
 	private GridPane left;
@@ -106,15 +110,16 @@ public class ChatClient extends Application {
 			
 			configGrid();
 
-			Scene scene = new Scene(grid, WINDOW_WIDTH, WINDOW_HEIGHT, Color.WHITE);
+			chatwindow = new Scene(grid, WINDOW_WIDTH, WINDOW_HEIGHT, Color.WHITE);
 
-			primaryStage.setScene(scene);
+			primaryStage.setScene(chatwindow);
 
 			primaryStage.isResizable();
+			
 
 			configElements();
 
-			primaryStage.setScene(scene);
+			primaryStage.setScene(chatwindow);
 
 			//configButtons();
 			
@@ -138,9 +143,11 @@ public class ChatClient extends Application {
 
 			connect();
 			
+			primaryStage.setHeight(480);
+			primaryStage.setWidth(720);
 			primaryStage.show();
 			
-
+			loginWindow();
 
 		} catch(Exception e) {
 
@@ -203,10 +210,9 @@ public class ChatClient extends Application {
 
 	}
 
-	
-
 	private void configElements() {
-
+		grid.maxHeightProperty().bind(chatwindow.heightProperty());
+		grid.maxWidthProperty().bind(chatwindow.widthProperty());;
 		left.prefHeightProperty().bind(grid.prefHeightProperty());
 		left.prefWidthProperty().set(200);
 		right.prefHeightProperty().bind(grid.prefHeightProperty());
@@ -214,6 +220,7 @@ public class ChatClient extends Application {
 		
 		chat.prefHeightProperty().bind(right.prefHeightProperty().multiply(.90));
 		chat.prefWidthProperty().bind(right.prefWidthProperty());
+		chat.setWrapText(true);
 		
 		send.prefHeightProperty().bind(right.prefHeightProperty().multiply(.1));
 		send.minWidthProperty().set(100);
@@ -268,14 +275,33 @@ public class ChatClient extends Application {
 
 				try {
 					streamOut.println(console.getText());
-					console.setText("");
+					console.clear();
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
-
 			}
-
 		});
+		
+		
+		console.setOnKeyPressed(new EventHandler<KeyEvent>() {
+	        @Override
+	        public void handle(KeyEvent ke) {
+	            if (ke.getCode().equals(KeyCode.ENTER)) {
+	            	try {
+						streamOut.println(console.getText());
+						console.clear();
+						Platform.runLater( new Runnable() {
+						    @Override
+						    public void run() {
+								console.positionCaret(console.getCaretPosition() - 1 );
+						    }
+						});
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+	            }
+	        }
+	    });
 	}
 	
 	private GridPane constructUserNode(String name) {
@@ -437,8 +463,6 @@ public class ChatClient extends Application {
 		});
 	}
 
-
-
 	public void removeUser(String string) {
 		Platform.runLater(new Runnable() {
 	        public void run() {
@@ -469,5 +493,7 @@ public class ChatClient extends Application {
 	}
 	
 	
-	
+	private void loginWindow() {
+		Stage stage = new Stage(); stage.setScene(new Scene(new GridPane(), WINDOW_WIDTH, WINDOW_HEIGHT, Color.WHITE)); stage.show();
+	}
 }
