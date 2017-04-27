@@ -13,6 +13,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
@@ -25,6 +26,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -34,7 +37,13 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Menu;
@@ -48,17 +57,22 @@ import sun.misc.OSEnvironment;
 import javafx.animation.TranslateTransition;
 import java.io.*;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
+import javafx.scene.image.Image;
 
 public class ChatClient extends Application {
 	
+	public boolean login = true;
 	private Socket socket;
 	private ClientThread thread;
 	private PrintStream clientOut;
 	private PrintStream streamOut;
+	private PrintStream loginOut;
 	
+	String name = "anon";
 	String servername = "localhost";
 	int serverport = 9001;
 	
+	private Stage primarystage;
 	private double WINDOW_WIDTH;
 	private double WINDOW_HEIGHT;
 	private Rectangle2D primaryScreenDimensions;
@@ -79,27 +93,28 @@ public class ChatClient extends Application {
 	private TilePane requests;
 	private ArrayList<String> requestIndexList;
 	
+	private Text loginText;
 	private TextArea console;
 	private TextArea chat;
 	private ScrollPane chatArea;
-	
-	private ContextMenu messageOpt;
-	private ContextMenu requestOpt;
+
 	
 	private MenuItem message;
 	private MenuItem add;
 
 	
 	private Button send;
-	private Button accept;
-	private Button decline;
 
 
-	
+	public static void main(String[] args) {
+		launch(args);
+	}
+
 	@Override
 	public void start(Stage primaryStage) {
 
-		try {			
+		try {
+			this.primarystage = primaryStage;
 			primaryStage.setTitle("JavaChat");
 			
 			createElements();
@@ -110,7 +125,7 @@ public class ChatClient extends Application {
 			
 			configGrid();
 
-			chatwindow = new Scene(grid, WINDOW_WIDTH, WINDOW_HEIGHT, Color.WHITE);
+			chatwindow = new Scene(grid, WINDOW_WIDTH, WINDOW_HEIGHT, Color.DARKGREY);
 
 			primaryStage.setScene(chatwindow);
 
@@ -140,15 +155,11 @@ public class ChatClient extends Application {
 			grid.add(right, 1, 0);
 			grid.add(requestScroll, 2, 0);
 			
-
-			connect();
-			
 			primaryStage.setHeight(480);
 			primaryStage.setWidth(720);
-			primaryStage.show();
 			
 			loginWindow();
-
+			
 		} catch(Exception e) {
 
 			e.printStackTrace();		
@@ -196,18 +207,11 @@ public class ChatClient extends Application {
 		requestIndexList = new ArrayList<String>();
 		
 		chat = new TextArea();
+		loginOut = new PrintStream(new Output(loginText));
 		clientOut = new PrintStream(new Console(chat), true);
 		
 		console = new TextArea();
 		send = new Button("Send");
-		
-		chatArea = new ScrollPane();
-		
-		message = new MenuItem("Message user");
-		add = new MenuItem("Add user to room");
-		
-		messageOpt = new ContextMenu(new MenuItem[] {message, add});
-
 	}
 
 	private void configElements() {
@@ -408,10 +412,6 @@ public class ChatClient extends Application {
 		return backplate;
 		
 	}
-
-	public static void main(String[] args) {
-		launch(args);
-	}
 	
 	private void connect() {
 		try {
@@ -430,7 +430,7 @@ public class ChatClient extends Application {
 
 
 	public void printMessage(String process) {
-		clientOut.println(process);
+		if (!login) clientOut.println(process);
 	}
 
 
@@ -492,8 +492,84 @@ public class ChatClient extends Application {
 		});
 	}
 	
-	
 	private void loginWindow() {
-		Stage stage = new Stage(); stage.setScene(new Scene(new GridPane(), WINDOW_WIDTH, WINDOW_HEIGHT, Color.WHITE)); stage.show();
-	}
+		Stage stage = new Stage();
+        stage.setTitle("JavaChat");
+        GridPane grid = new GridPane();
+        grid.setAlignment(Pos.CENTER);
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(25, 25, 25, 25));
+        BackgroundImage myBI= new BackgroundImage(new Image("file:resources/background.jpg", 1680, 1080, false,true),
+                BackgroundRepeat.REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER,
+                  BackgroundSize.DEFAULT);
+        grid.setBackground(new Background(myBI));
+
+        Text scenetitle = new Text("Connect to JavaChat");
+        scenetitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
+        scenetitle.setFill(Color.WHITESMOKE);
+        grid.add(scenetitle, 0, 0, 2, 1);
+
+        Label userName = new Label("User Name:");
+        userName.setTextFill(Color.WHITESMOKE);
+        grid.add(userName, 0, 1);
+
+        TextField userTextField = new TextField();
+        userTextField.setPromptText("no '@' or '/' please!");
+        grid.add(userTextField, 1, 1);
+
+        Label sv = new Label("Server: ");
+        sv.setTextFill(Color.WHITESMOKE);
+        grid.add(sv, 0, 2);
+
+        TextField svBox = new TextField();
+        svBox.setPromptText("localhost");
+        grid.add(svBox, 1, 2);
+        
+        Label pt = new Label("Port: ");
+        pt.setTextFill(Color.WHITESMOKE);
+        grid.add(pt, 0, 3);
+        
+        TextField ptBox = new TextField();
+        ptBox.setPromptText("9001");
+        grid.add(ptBox, 1, 3);
+
+        Button btn = new Button("Sign in");
+        HBox hbBtn = new HBox(10);
+        hbBtn.setAlignment(Pos.BOTTOM_RIGHT);
+        hbBtn.getChildren().add(btn);
+        grid.add(hbBtn, 1, 4);
+
+        final Text loginText = new Text();
+        grid.add(loginText, 0, 6, 4, 1);
+        loginText.setFill(Color.FIREBRICK);
+
+        btn.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent e) {
+            	if (!userTextField.equals("")) {
+            		name =  userTextField.getText();
+            		userTextField.clear();
+            	}
+            	if (!svBox.getText().equals("")) {
+            		servername = svBox.getText();
+            		svBox.clear();
+            	}
+            	if (!ptBox.getText().equals("")) {
+            		serverport =  Integer.parseInt(ptBox.getText());
+            		ptBox.clear();
+            	}
+            	login = false;
+            	primarystage.show();
+            	stage.close();
+            	connect();
+            	streamOut.println(name);
+            }
+        });
+
+        Scene scene = new Scene(grid, 300, 275);
+        stage.setScene(scene);
+        stage.show();
+    }
 }

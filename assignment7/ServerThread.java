@@ -37,7 +37,6 @@ class ServerThread extends Thread {
 				boolean validname = false;
 				boolean uniquename = true;
 				String newname = "anon" + Integer.toString(threads.size());
-				os.println("Enter your name, your name should not contain an @ or /");
 				while (!validname || !uniquename) {
 					newname = is.readLine();
 					if (!uniquename) uniquename = true;
@@ -52,8 +51,12 @@ class ServerThread extends Thread {
 								}
 							}
 						}
-					} else os.println("name is invalid, try again");
-					if (!uniquename) os.println("name is already in use, try again");
+					} else {
+						os.println("name is invalid, try again");
+					}
+					if (!uniquename) {
+						os.println("name is already in use, try again");
+					}
 				}
 				//adds handle symbol to name, for use with parser
 				name = '@' + newname;
@@ -61,11 +64,10 @@ class ServerThread extends Thread {
 				os.println("Welcome " + name);
 				os.println("/users " + onlineUsers());
 			        for(ServerThread thread : threads) {
-			        	if (thread != this) thread.os.println("/online " + name);
+			        	if (thread != this && thread.name != null) thread.os.println("/online " + name);
 			        	
 			        }
 			}	
-     
 			/*
 			 * Main thread loop, terminated when client wants to disconnect
 			 */
@@ -103,7 +105,7 @@ class ServerThread extends Thread {
 		String list = "";
 		synchronized(this) {
 			for (ServerThread thread: threads) {
-				if (thread != this) list += thread.name + " ";
+				if (thread != this && thread.name != null) list += thread.name + " ";
 			}
 		}
 		return list;
