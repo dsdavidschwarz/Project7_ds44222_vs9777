@@ -81,6 +81,12 @@ class ServerThread extends Thread {
 						if (thread != this) thread.os.println("/offline " + name);
 					}
 				}
+				for(ServerThread thread : currentroom) {
+					if (thread != null && thread != this && thread.name != null) {
+						if (thread != this) thread.os.println("/left " + name);
+					}
+				}
+				currentroom.remove(this);
 				threads.remove(this);
 			}
 			//closes IO streams and the socket, thread will finish running and end.
@@ -113,6 +119,8 @@ class ServerThread extends Thread {
 	 * /add <name> adds <name> to the current room
 	 * /accept <name> accepts a room invite by a user;
 	 * /decline <name> declines a room invite by a user;
+	 * /left indicates the user has left their current room
+	 *
 	 * MORE TO COME
 	 * 	 
 	 * *
@@ -149,6 +157,13 @@ class ServerThread extends Thread {
 		if (line[0].toLowerCase().equals("/message")) {
 			if (line[1].startsWith("@")) {
 				synchronized(this) {
+
+					for(ServerThread thread : currentroom) {
+						if (thread != this && thread != null) {
+							thread.os.println("/left " + line[1]);
+						}
+					}
+					currentroom.remove(this);
 					currentroom = new HashSet<ServerThread>();
 					currentroom.add(this);
 					for(ServerThread thread : threads) {
@@ -188,8 +203,29 @@ class ServerThread extends Thread {
 					for(ServerThread thread : threads) {
 						if (thread.name.equals(line[1])) {
 							currentroom = thread.currentroom;
+							for (ServerThread user : currentroom) {
+								user.os.println("/entered " + this.name);
+							}
+							String roomList = "/roomList ";
+							for(ServerThread user : currentroom) {
+								roomList += user.name + " ";
+							}
+							this.os.println(roomList);
 							currentroom.add(this);
-							os.println(line[1] +" entered the room");
+							return 1;
+						}
+					}	
+					return 1;
+				}
+			}
+		}
+		
+		if (line[0].toLowerCase().equals("/decline")) {
+			if (line[1].startsWith("@")) {
+				synchronized(this) {
+					for(ServerThread thread : threads) {
+						if (thread.name.equals(line[1])) {
+							thread.os.println("/decline " + line[1]);
 							return 1;
 						}
 					}
@@ -198,16 +234,17 @@ class ServerThread extends Thread {
 				}
 			}
 		}
-		if (line[0].toLowerCase().equals("/decline")) {
+		
+		if (line[0].toLowerCase().equals("/left")) {
 			if (line[1].startsWith("@")) {
 				synchronized(this) {
-					for(ServerThread thread : threads) {
-						if (thread.name.equals(line[1])) {
-							thread.os.println(name + " declined your room invite");
+					for(ServerThread thread : currentroom) {
+						if (thread != this && thread != null) {
+							thread.os.println("/left " + line[1]);
+							currentroom.remove(this);
 							return 1;
 						}
 					}
-					os.println("user no longer online, sorry!");
 					return 1;
 				}
 			}

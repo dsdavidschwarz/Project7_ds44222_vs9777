@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -65,8 +66,14 @@ public class ChatClient extends Application {
 	
 	private ScrollPane userScroll;
 	private ScrollPane roomScroll;
+	private ScrollPane requestScroll;
+	
 	private TilePane users;
+	private ArrayList<String> userIndexList;
 	private TilePane room;
+	private ArrayList<String> roomIndexList;
+	private TilePane requests;
+	private ArrayList<String> requestIndexList;
 	
 	private TextArea console;
 	private TextArea chat;
@@ -126,6 +133,7 @@ public class ChatClient extends Application {
 			
 			grid.add(left, 0, 0);
 			grid.add(right, 1, 0);
+			grid.add(requestScroll, 2, 0);
 			
 
 			connect();
@@ -142,7 +150,17 @@ public class ChatClient extends Application {
 
 	}
 
-	
+	@Override
+	public void stop(){
+	   streamOut.println("/quit");
+	   streamOut.close();
+	   try {
+		socket.close();
+	} catch (IOException e) {
+		e.printStackTrace();
+	}
+	   thread.end();
+	}
 
 	private void createElements(){
 
@@ -153,12 +171,22 @@ public class ChatClient extends Application {
 		
 		userScroll = new ScrollPane();
 		roomScroll = new ScrollPane();
+		requestScroll = new ScrollPane();
+		
 		users = new TilePane(Orientation.HORIZONTAL);
 		users.setTileAlignment(Pos.CENTER_LEFT);
 		users.prefColumnsProperty().set(1);
+		userIndexList = new ArrayList<String>();
+		
 		room = new TilePane(Orientation.VERTICAL);
 		room.setTileAlignment(Pos.CENTER_LEFT);
 		room.prefColumnsProperty().set(1);
+		roomIndexList = new ArrayList<String>();
+		
+		requests = new TilePane(Orientation.VERTICAL);
+		requests.setTileAlignment(Pos.CENTER_LEFT);
+		requests.prefColumnsProperty().set(1);
+		requestIndexList = new ArrayList<String>();
 		
 		chat = new TextArea();
 		clientOut = new PrintStream(new Console(chat), true);
@@ -210,6 +238,14 @@ public class ChatClient extends Application {
 		roomScroll.setHbarPolicy(ScrollBarPolicy.NEVER);
 		roomScroll.setVbarPolicy(ScrollBarPolicy.ALWAYS);
 		
+		requestScroll.prefHeightProperty().bind(grid.prefHeightProperty().multiply(.2));
+		requestScroll.minHeightProperty().bind(grid.prefHeightProperty().multiply(.2));
+		requestScroll.prefWidthProperty().set(200);
+		requestScroll.minWidthProperty().set(200);
+		requests.setMaxWidth(200);
+		requestScroll.setContent(requests);
+		requestScroll.setHbarPolicy(ScrollBarPolicy.NEVER);
+		requestScroll.setVbarPolicy(ScrollBarPolicy.ALWAYS);
 		
 		chat.editableProperty().set(false);
 	}
@@ -241,7 +277,111 @@ public class ChatClient extends Application {
 
 		});
 	}
+	
+	private GridPane constructUserNode(String name) {
+		GridPane backplate = new GridPane();
+		backplate.setPrefHeight(110);
+		backplate.setMinHeight(110);
+		backplate.setPrefWidth(200);
+		backplate.setMinWidth(200);
+		
+		Label nameplate = new Label(name);
+		nameplate.setPrefHeight(30);
+		nameplate.setPrefWidth(180);
+		
+		Button message = new Button("message");
+		message.setPrefHeight(30);
+		message.setPrefWidth(80);
+		message.setOnAction(new EventHandler<ActionEvent>(){
+			public void handle(ActionEvent e){
+				try {
+					if(!roomIndexList.contains(name)) streamOut.println("/message " + name);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		Button add = new Button("add");
+		add.setPrefHeight(30);
+		add.setPrefWidth(80);
+		add.setOnAction(new EventHandler<ActionEvent>(){
+			public void handle(ActionEvent e){
+				try {
+					if(!roomIndexList.contains(name)) streamOut.println("/add " + name);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		backplate.add(nameplate, 0, 0, 2, 1);
+		backplate.add(message, 0, 1);
+		backplate.add(add, 1, 1);
+		return backplate;
+		
+	}
+	
+	private GridPane constructRoomNode(String string) {
+		GridPane backplate = new GridPane();
+		backplate.setPrefHeight(110);
+		backplate.setMinHeight(110);
+		backplate.setPrefWidth(200);
+		backplate.setMinWidth(200);
+		
+		Label nameplate = new Label(string);
+		nameplate.setPrefHeight(30);
+		nameplate.setPrefWidth(180);
+		backplate.add(nameplate, 0, 0);
+		
+		return backplate;
+	}
 
+	private GridPane constructRequestNode(String name) {
+		GridPane backplate = new GridPane();
+		backplate.setPrefHeight(110);
+		backplate.setMinHeight(110);
+		backplate.setPrefWidth(200);
+		backplate.setMinWidth(200);
+		
+		Label nameplate = new Label("Room Invite From: " + name);
+		nameplate.setPrefHeight(30);
+		nameplate.setPrefWidth(180);
+		
+		Button message = new Button("accept");
+		message.setPrefHeight(30);
+		message.setPrefWidth(80);
+		message.setOnAction(new EventHandler<ActionEvent>(){
+			public void handle(ActionEvent e){
+				try {
+					streamOut.println("/accept " + name);
+					removeRequest(name);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		Button add = new Button("decline");
+		add.setPrefHeight(30);
+		add.setPrefWidth(80);
+		add.setOnAction(new EventHandler<ActionEvent>(){
+			public void handle(ActionEvent e){
+				try {
+					streamOut.println("/decline " + name);
+					removeRequest(name);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		backplate.add(nameplate, 0, 0, 2, 1);
+		backplate.add(message, 0, 1);
+		backplate.add(add, 1, 1);
+		return backplate;
+		
+	}
 
 	public static void main(String[] args) {
 		launch(args);
@@ -270,24 +410,63 @@ public class ChatClient extends Application {
 
 
 	public void request(String split) {
-		// TODO Auto-generated method stub
-		
+		Platform.runLater(new Runnable() {
+	        public void run() {
+	        	requestIndexList.add(split);
+	        	requests.getChildren().add(constructRequestNode(split));
+	        }
+		});
 	}
 
-
+	public void removeRequest(String string) {
+		Platform.runLater(new Runnable() {
+	        public void run() {
+	        	int requestIndex = requestIndexList.indexOf(string);
+	        	if (requestIndex >= 0) requests.getChildren().remove(requestIndex);
+	        	requestIndexList.remove(requestIndex);
+	        }
+		});
+	}
 
 	public void addUser(String string) {
-		// TODO Auto-generated method stub
-		
+		Platform.runLater(new Runnable() {
+	        public void run() {
+	        	userIndexList.add(string);
+	        	users.getChildren().add(constructUserNode(string));
+	        }
+		});
 	}
 
 
 
 	public void removeUser(String string) {
-		// TODO Auto-generated method stub
-		
+		Platform.runLater(new Runnable() {
+	        public void run() {
+	        	int userIndex = userIndexList.indexOf(string);
+	        	if (userIndex >= 0) users.getChildren().remove(userIndex);
+	        	userIndexList.remove(userIndex);
+	        }
+		});
 	}
-	
+
+	public void addRoom(String string) {
+		Platform.runLater(new Runnable() {
+	        public void run() {
+	        	roomIndexList.add(string);
+	        	room.getChildren().add(constructRoomNode(string));
+	        }
+		});
+	}
+
+	public void removeRoom(String string) {
+		Platform.runLater(new Runnable() {
+	        public void run() {
+	        	int roomIndex = roomIndexList.indexOf(string);
+	        	if (roomIndex >= 0) room.getChildren().remove(roomIndex);
+	        	roomIndexList.remove(roomIndex);
+	        }
+		});
+	}
 	
 	
 	

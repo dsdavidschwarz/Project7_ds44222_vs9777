@@ -56,8 +56,27 @@ public class ClientThread extends Thread {
 			client.addUser(split[i]);
 			}
 		}
-		;
+		if (split[0].equals("/entered")) {
+			client.addRoom(split[1]);
+		}
+		if (split[0].equals("/left")) {
+			client.removeRoom(split[1]);
+		};
+		
+		if (split[0].equals("/roomList")) {
+			for (int i = 1; i < split.length; i++) {
+				client.addRoom(split[i]);
+			}
+		}
 	}
 	
+	public void end () {
+		try {
+			is.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		connected = false;
+	}
 	
 }
