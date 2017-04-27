@@ -50,7 +50,7 @@ public class ChatClient extends Application {
 	private Socket socket;
 	private ClientThread thread;
 	private PrintStream clientOut;
-	private DataOutputStream streamOut;
+	private PrintStream streamOut;
 	
 	String servername = "localhost";
 	int serverport = 9001;
@@ -68,7 +68,7 @@ public class ChatClient extends Application {
 	private TilePane users;
 	private TilePane room;
 	
-	private TextField console;
+	private TextArea console;
 	private TextArea chat;
 	private ScrollPane chatArea;
 	
@@ -114,12 +114,14 @@ public class ChatClient extends Application {
 			configEventHandlers();
 			
 			clientOut.println("hi");
+			left.add(new Text( "Current Room"), 0, 0);
+			left.add(roomScroll, 0, 1);
+			left.add(new Text("User List"), 0, 2);
+			left.add(userScroll, 0, 3);
 			
-			left.add(new Text("User List"), 0, 0);
-			left.add(userScroll, 0, 1);
-			
-			right.add(console, 1, 1);
-			right.add(chat, 1, 0);
+			right.add(chat, 0, 0, 2, 1);
+			right.add(console, 0, 1, 1, 1);
+			right.add(send, 1, 1, 1, 1);
 			
 			
 			grid.add(left, 0, 0);
@@ -161,7 +163,8 @@ public class ChatClient extends Application {
 		chat = new TextArea();
 		clientOut = new PrintStream(new Console(chat), true);
 		
-		console = new TextField();	
+		console = new TextArea();
+		send = new Button("Send");
 		
 		chatArea = new ScrollPane();
 		
@@ -184,22 +187,31 @@ public class ChatClient extends Application {
 		chat.prefHeightProperty().bind(right.prefHeightProperty().multiply(.90));
 		chat.prefWidthProperty().bind(right.prefWidthProperty());
 		
-		console.prefHeightProperty().bind(right.prefHeightProperty().multiply(.1));
+		send.prefHeightProperty().bind(right.prefHeightProperty().multiply(.1));
+		send.minWidthProperty().set(100);
+		
+		console.prefHeightProperty().bind(send.prefHeightProperty());
 		console.prefWidthProperty().bind(right.prefWidthProperty());
 		
 		userScroll.prefHeightProperty().bind(grid.prefHeightProperty().multiply(.8));
 		userScroll.prefWidthProperty().set(200);
 		userScroll.minWidthProperty().set(200);
 		users.setMaxWidth(200);
-		
 		userScroll.setContent(users);
 		userScroll.setHbarPolicy(ScrollBarPolicy.NEVER);
 		userScroll.setVbarPolicy(ScrollBarPolicy.ALWAYS);
-		for (int i = 0; i < 100; i ++) {
-			Text text = new Text("@david");
-			text.minWidth(400);
-			users.getChildren().add(text);
-		}
+		
+		roomScroll.prefHeightProperty().bind(grid.prefHeightProperty().multiply(.2));
+		roomScroll.minHeightProperty().bind(grid.prefHeightProperty().multiply(.2));
+		roomScroll.prefWidthProperty().set(200);
+		roomScroll.minWidthProperty().set(200);
+		room.setMaxWidth(200);
+		roomScroll.setContent(room);
+		roomScroll.setHbarPolicy(ScrollBarPolicy.NEVER);
+		roomScroll.setVbarPolicy(ScrollBarPolicy.ALWAYS);
+		
+		
+		chat.editableProperty().set(false);
 	}
 
 	
@@ -214,197 +226,20 @@ public class ChatClient extends Application {
 	
 
 	private void configEventHandlers() {
-/*
-		create.setOnAction(new EventHandler<ActionEvent>() {
-
-			public void handle(ActionEvent e) {
-
-				if((critterComboBox.getValue() != null) && (numberCritters.getText().equals(""))){
-
-						String tester = (String) critterComboBox.getValue();
-
-						try {
-
-							Critter.makeCritter(tester);
-
-						} catch (InvalidCritterException e1) {
-
-							e1.printStackTrace();
-
-						}
-
-					} else if ((critterComboBox.getValue() != null) && (!numberCritters.getText().equals(""))){
-
-						try { 
-
-					        Integer.parseInt(numberCritters.getText()); 
-
-							Integer numToCreate = Integer.valueOf(numberCritters.getText());
-
-							for (int i = 0; i < numToCreate; i++) {
-
-								String tester = (String) critterComboBox.getValue();
-
-								try {
-
-									Critter.makeCritter(tester);
-
-								} catch (InvalidCritterException e1) {
-
-									e1.printStackTrace();
-
-								}
-
-							}
-
-					    } catch(Exception e1) { 
-
-					    	numberCritters.setText("Invalid Attempt");
-
-					    }
-
-					}
-
-					
-
-				}
-
-			});
-
-		
-
-		takeSteps.setOnAction(new EventHandler<ActionEvent>() {
-
-			public void handle(ActionEvent e) {
-
-				if ((stepComboBox.getValue() == null)) {
-
-					Critter.worldTimeStep();
-
-				}
-
-				else if ((stepComboBox.getValue() == "1 Step")) {
-
-					Critter.worldTimeStep();
-
-				}
-
-				else if ((stepComboBox.getValue() == "10 Steps")) {
-
-					for(int i = 0; i < 10; i++) {
-
-						Critter.worldTimeStep();
-
-						}
-
-					}
-
-				else if ((stepComboBox.getValue() == "100 Steps")) {
-
-					 for(int i = 0; i < 100; i++) {
-
-						 Critter.worldTimeStep();
-
-					 }
-
-				}
-
-				else if ((stepComboBox.getValue() == "1000 Steps")) {
-
-					for (int i=0; i<1000; i++) {
-
-						Critter.worldTimeStep();
-
-					}
-
-				}
-
-				Critter.displayWorld(null);
-
-				if (currentStatsCritter != null) {
-
-					try {
-
-						consoleOutput.setText(Critter.runStats(Critter.getInstances(currentStatsCritter)));
-
-					} catch (InvalidCritterException e1) {
-
-						e1.printStackTrace();
-
-					}
-
-				}
-
-			}
-
-		});
-
-		
-
-		reset.setOnAction(new EventHandler<ActionEvent>(){
+		send.setOnAction(new EventHandler<ActionEvent>(){
 
 			public void handle(ActionEvent e){
 
-				Critter.clearWorld();
-
-			}
-
-		});
-
-		
-
-		runStats.setOnAction(new EventHandler<ActionEvent>() {
-
-			public void handle(ActionEvent e) {
-
 				try {
-
-					currentStatsCritter = critterStatsBox.getValue();
-
-					List<Critter> instancelist = Critter.getInstances(currentStatsCritter);
-
-					String text = Critter.runStats(instancelist);
-
-					consoleOutput.setText(text);
-
-				} catch (InvalidCritterException e1) {
-
+					streamOut.println(console.getText());
+					console.setText("");
+				} catch (Exception e1) {
 					e1.printStackTrace();
-
 				}
 
 			}
 
-				
-
 		});
-
-	
-
-		quit.setOnAction(new EventHandler<ActionEvent>() {
-
-			public void handle(ActionEvent e) {
-
-				System.exit(1);
-
-			}
-
-		});
-
-	
-
-	
-
-		seed.setOnAction(new EventHandler<ActionEvent>() {
-
-			public void handle(ActionEvent e) {
-
-				Critter.setSeed(Integer.parseInt(setSeed.getText()));
-
-			}
-
-		});
-*/
 	}
 
 
@@ -415,7 +250,7 @@ public class ChatClient extends Application {
 	private void connect() {
 		try {
 			socket = new Socket(servername, serverport);
-			streamOut = new DataOutputStream(socket.getOutputStream());
+			streamOut = new PrintStream(socket.getOutputStream());
 			thread = new ClientThread(this, new DataInputStream(socket.getInputStream()));
 			thread.start();
 			
@@ -430,7 +265,6 @@ public class ChatClient extends Application {
 
 	public void printMessage(String process) {
 		clientOut.println(process);
-		
 	}
 
 
