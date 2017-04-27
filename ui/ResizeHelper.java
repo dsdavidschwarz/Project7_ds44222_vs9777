@@ -1,4 +1,4 @@
-package UI;
+package ui;
 
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;

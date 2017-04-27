@@ -2,13 +2,14 @@ package client;
 
 import java.io.*;
 
+
 public class ClientThread extends Thread {
-	private PrintStream clientOutput = null;
+	private ChatClient client = null;
 	private DataInputStream is;
 	private boolean connected = true;
 	
-	public ClientThread(PrintStream outputLine, DataInputStream is) {
-		this.clientOutput = outputLine;
+	public ClientThread(ChatClient c, DataInputStream is) {
+		this.client = c;
 		this.is = is;
 	}
 	
@@ -16,8 +17,7 @@ public class ClientThread extends Thread {
 	public void run() {
 		try {
 			while (connected) {
-				String line = is.readLine();
-				if (line != null) clientOutput.println(process(line));
+				process(is.readLine());				
 			}
 		} catch (IOException e) {
 			System.err.println("IOException:  " + e);
@@ -30,10 +30,10 @@ public class ClientThread extends Thread {
 	 * @param readLine
 	 * @return String to output
 	 */
-	private String process(String readLine) {
+	private void process(String readLine) {
 		if (readLine.startsWith("/")) {
-			return handle(readLine.split(" "));
-		} else return readLine;
+			handle(readLine.split(" "));
+		} else client.printMessage(readLine);
 	}
 
 	/**
@@ -41,23 +41,23 @@ public class ClientThread extends Thread {
 	 * @param split
 	 * @return Command String to output
 	 */
-	private String handle(String[] split) {
+	private void handle(String[] split) {
 		if (split[0].equals("/request")) {
-			return split[1] + " wants to chat, type /accept " + split[1] + " or /decline " + split[1];
+			client.request(split[1]);
 		}
 		if (split[0].equals("/online")) {
-			return split[1] + " is online";
+			client.addUser(split[1]);
 		}
 		if (split[0].equals("/offline")) {
-			return split[1] + " is offline";
+			client.removeUser(split[1]);
 		}
 		if (split[0].equals("/users")) {
-			String out = "Users online: ";
-			for (int i = 1; i < split.length - 1; i++) {
-				out += split[i] + ", ";
+			for (int i = 1; i < split.length; i++) {
+			client.addUser(split[i]);
 			}
-			out += split[split.length - 1];
-			return out;
-		} else return "Just received an invalid server command " + split[0] + " sorry!";
+		}
+		;
 	}
+	
+	
 }

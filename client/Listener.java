@@ -1,69 +1,74 @@
-//i think we should create a listener that organizes everything 
-
 package client;
 
-import UI.ChatController;
-import UI.LoginController;
-import messages.Message;
-import messages.MessageType;
-import messages.Status;
 import java.io.*;
-import java.net.Socket;
 
-public class Listener implements Runnable{
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.Scene;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextAreaBuilder;
+import javafx.stage.Stage;
 
-    private Socket socket;
-    public static String username;
-    public ChatController controller;
-    private static ObjectOutputStream oos;
-    private InputStream is;
-    private ObjectInputStream input;
-    private OutputStream outputStream;
+public class Listener extends Application {
+	
+	PrintStream ps;
+	TextArea ta;
+	
+	public Listener() {}
+	
+    @Override
+    public void start(Stage primaryStage) throws IOException {
 
-    public Listener(String username, ChatController controller) {
-        Listener.username = username;
-        this.controller = controller;
+        ta = TextAreaBuilder.create().prefWidth(800).prefHeight(600).wrapText(true).build();
+        Console console = new Console(ta);
+        PrintStream ps = new PrintStream(console, true);
+        Scene app = new Scene(ta);
+
+        primaryStage.setScene(app);
+        primaryStage.show();
+        
+        ps.println("working");
+        this.ps = ps;
     }
 
-    //im not really sure how to do this part
-    public void run() {
-        try {
-            LoginController.getInstance().showScene();
-            outputStream = socket.getOutputStream();
-            oos = new ObjectOutputStream(outputStream);
-            is = socket.getInputStream();
-            input = new ObjectInputStream(is);
-        } catch (IOException e) {}
+    public void init(String[] args) {
+        launch(args);
+    }
+    
+    public PrintStream getStream() {
+    	return ps;
+    }
 
-        try {
-            /*connect and while it is connected check if there is a message
-             * switch case to get type of message and output certain message
-             * */
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static class Console extends OutputStream {
+
+        private TextArea output;
+
+        public Console(TextArea ta) {
+            this.output = ta;
+        }
+
+        @Override
+        public void write(int i) throws IOException {
+        	Platform.runLater(new Runnable() {
+                public void run() {
+                    output.appendText(String.valueOf((char) i));
+                }
+            });
+
         }
     }
+    
+	private Client createClient() {
 
-    /* Sending normal Message
-     */
-    public static void send(String msg) throws IOException {
-        Message createMessage = new Message();
-        createMessage.setName(username);
-        createMessage.setType(MessageType.USER);
-        createMessage.setMsg(msg);
-        oos.writeObject(createMessage);
-        oos.flush();
-    }
+		return new Client(this.ip, this.port, data -> {
 
-    /* Like sending normal message, but send update on status
-     *  */
-    public static void sendStatusUpdate(Status status) throws IOException {
-        Message createMessage = new Message();
-        createMessage.setName(username);
-        createMessage.setType(MessageType.STATUS);
-        createMessage.setStatus(status);
-        oos.writeObject(createMessage);
-        oos.flush();
-    }
+			Platform.runLater(() -> {
 
+				chatWindow.appendText(data.toString() + "\n");
+
+			});
+
+		});
+
+	}
 }

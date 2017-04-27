@@ -1,4 +1,4 @@
-package UI;
+package ui;
 
 import java.net.URL;
 import java.util.ResourceBundle;

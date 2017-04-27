@@ -1,7 +1,8 @@
-package UI;
+package ui;
 
-import UI.ResizeHelper;
-
+import ui.ResizeHelper;
+import client.Listener;
+import java.net.*;
 import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
@@ -50,13 +51,7 @@ public class LoginController implements Initializable {
 		
 		 FXMLLoader fmxlLoader = new FXMLLoader(getClass().getResource("/views/ChatView.fxml"));
 	     Parent window = (Pane) fmxlLoader.load();
-	     con = fmxlLoader.<ChatController>getController();
-	     
-	      Listener listener = new Listener(serverSocket.accept(), threads, username);
-	      * Thread x = new Thread(listener);
-	      * x.start();
-	      * */
-	     
+	     con = fmxlLoader.<ChatController>getController();     
 	     this.scene = new Scene(window);
 	}
 	
@@ -165,11 +160,11 @@ public class LoginController implements Initializable {
         r1.setOpacity(0.1);
 
        //idk why its not working :C
-        KeyFrame keyFrame = new KeyFrame(Duration.millis(speedOfSqaure * 1000), moveXAxis, moveYAxis);
+        //KeyFrame keyFrame = new KeyFrame(Duration.ofMillis((long) speedOfSqaure * 1000), moveXAxis, moveYAxis);
         Timeline timeline = new Timeline();
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.setAutoReverse(true);
-        timeline.getKeyFrames().add(keyFrame);
+        //timeline.getKeyFrames().add(keyFrame);
         timeline.play();
         borderPane.getChildren().add(borderPane.getChildren().size()-1,r1);
     }

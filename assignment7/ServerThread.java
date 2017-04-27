@@ -18,6 +18,8 @@ class ServerThread extends Thread {
 		this.clientSocket = clientSocket;
 		this.threads = threads;
 		connected = true;
+		currentroom = new HashSet<ServerThread>();
+		currentroom.add(this);
 		
 	}
 
@@ -34,28 +36,33 @@ class ServerThread extends Thread {
 			synchronized(this) {
 				boolean validname = false;
 				boolean uniquename = true;
+				String newname = "anon" + Integer.toString(threads.size());
 				os.println("Enter your name, your name should not contain an @ or /");
-				while (!validname) {
-					name = is.readLine();
-					if (name.equals("null")) continue;
-					if (name.indexOf('@') == -1 && name.indexOf('/') == -1) {
+				while (!validname || !uniquename) {
+					newname = is.readLine();
+					if (!uniquename) uniquename = true;
+					if (newname.equals("null")) continue;
+					if (newname.indexOf('@') == -1 && newname.indexOf('/') == -1) {
 						validname = true;
 						for (ServerThread thread: threads) {
-							if (thread.name.equals(name)) {
-								uniquename = false;
-								break;
+							if (thread.name != null && thread != this) {
+								if (thread.name.equals("@" + newname)) {
+									uniquename = false;
+									break;
+								}
 							}
 						}
 					} else os.println("name is invalid, try again");
 					if (!uniquename) os.println("name is already in use, try again");
 				}
 				//adds handle symbol to name, for use with parser
-				name = '@' + name;
+				name = '@' + newname;
 				//Send online status to server
 				os.println("Welcome " + name);
-				os.println("/users" + onlineUsers());
+				os.println("/users " + onlineUsers());
 			        for(ServerThread thread : threads) {
-			        	thread.os.println("/online " + name);
+			        	if (thread != this) thread.os.println("/online " + name);
+			        	
 			        }
 			}	
      
@@ -71,7 +78,7 @@ class ServerThread extends Thread {
 			synchronized (this) {
 				for(ServerThread thread : threads) {
 					if (thread != null && thread != this && thread.name != null) {
-						thread.os.println("/offline " + name);
+						if (thread != this) thread.os.println("/offline " + name);
 					}
 				}
 				threads.remove(this);
@@ -90,7 +97,7 @@ class ServerThread extends Thread {
 		String list = "";
 		synchronized(this) {
 			for (ServerThread thread: threads) {
-				list += thread.name + " ";
+				if (thread != this) list += thread.name + " ";
 			}
 		}
 		return list;
@@ -118,10 +125,8 @@ class ServerThread extends Thread {
 		} else if (currentroom != null) {
 			synchronized (this) {
 				for(ServerThread thread : currentroom) {
-					if (thread != null && thread != this && thread.name != null) {
+					if (thread != null && thread.name != null) {
 						thread.os.println(name + ": " + line);
-						this.os.println(name + ": " + line);
-						break;
 					}
 				}
 			}
@@ -134,7 +139,8 @@ class ServerThread extends Thread {
 	 */
 	private int handle(String[] line) {
 		if (line[0].toLowerCase().equals("/help")) {
-			
+			os.println("/quit /message /add ");
+			return 1;
 		}
 		if (line[0].toLowerCase().equals("/quit")) {
 			connected = false;
@@ -143,11 +149,12 @@ class ServerThread extends Thread {
 		if (line[0].toLowerCase().equals("/message")) {
 			if (line[1].startsWith("@")) {
 				synchronized(this) {
+					currentroom = new HashSet<ServerThread>();
+					currentroom.add(this);
 					for(ServerThread thread : threads) {
 						if (thread.name.equals(line[1])) {
-							currentroom = new HashSet<ServerThread>();
-							currentroom.add(thread);
-							thread.os.println("/request " + name);
+							if (thread != this) thread.os.println("/request " + name);
+							else thread.os.println("You cannot message yourself!");
 							return 1;
 						}
 					}
@@ -163,9 +170,8 @@ class ServerThread extends Thread {
 					synchronized(this) {
 						for(ServerThread thread : threads) {
 							if (thread.name.equals(line[1])) {
-								currentroom = new HashSet<ServerThread>();
-								currentroom.add(thread);
-								thread.os.println("/request " + name);
+								if (thread != this) thread.os.println("/request " + name);
+								else thread.os.println("You cannot add yourself!");
 								return 1;
 							}
 						}
@@ -182,6 +188,8 @@ class ServerThread extends Thread {
 					for(ServerThread thread : threads) {
 						if (thread.name.equals(line[1])) {
 							currentroom = thread.currentroom;
+							currentroom.add(this);
+							os.println(line[1] +" entered the room");
 							return 1;
 						}
 					}
@@ -190,7 +198,7 @@ class ServerThread extends Thread {
 				}
 			}
 		}
-		if (line[0].toLowerCase().equals("/accept")) {
+		if (line[0].toLowerCase().equals("/decline")) {
 			if (line[1].startsWith("@")) {
 				synchronized(this) {
 					for(ServerThread thread : threads) {

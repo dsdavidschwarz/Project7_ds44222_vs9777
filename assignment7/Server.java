@@ -16,7 +16,7 @@ public class Server {
 		threads = new HashSet<ServerThread>();
 		int portNumber = 9001;
 		if (args.length < 1) {
-			System.out.println("Usage: java MultiThreadChatServerSync <portNumber>\n" + "Now using port number=" + portNumber);
+			System.out.println("Server started at port: " + portNumber);
 		} else {
 			portNumber = Integer.valueOf(args[0]).intValue();
 		}

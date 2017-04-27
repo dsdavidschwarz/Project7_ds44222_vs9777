@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 public class User implements Serializable {
 
+	Status status;
+	
     public String getName() {
         return name;
     }
@@ -22,5 +24,5 @@ public class User implements Serializable {
         this.status = status;
     }
     
-    Status status;
+    
 }
