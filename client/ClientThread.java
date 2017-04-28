@@ -33,7 +33,8 @@ public class ClientThread extends Thread {
 	private void process(String readLine) {
 		if (readLine.startsWith("/")) {
 			handle(readLine.split(" "));
-		} else client.printMessage(readLine);
+		} 
+		client.printMessage(readLine);
 	}
 
 	/**

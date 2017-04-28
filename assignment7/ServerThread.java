@@ -159,10 +159,10 @@ class ServerThread extends Thread {
 		if (line[0].toLowerCase().equals("/message")) {
 			if (line[1].startsWith("@")) {
 				synchronized(this) {
-
-					for(ServerThread thread : currentroom) {
-						if (thread != this && thread != null) {
-							thread.os.println("/left " + line[1]);
+					for(ServerThread user : currentroom) {
+						if (user != this && user != null) {
+							this.os.println("/left " + user.name);
+							user.os.println("/left " + this.name);
 						}
 					}
 					currentroom.remove(this);
@@ -204,6 +204,12 @@ class ServerThread extends Thread {
 				synchronized(this) {
 					for(ServerThread thread : threads) {
 						if (thread.name.equals(line[1])) {
+							for(ServerThread user : currentroom) {
+								if (user != this && user != null) {
+									this.os.println("/left " + user.name);
+									user.os.println("/left " + line[1]);
+								}
+							}
 							currentroom = thread.currentroom;
 							for (ServerThread user : currentroom) {
 								user.os.println("/entered " + this.name);
@@ -238,16 +244,38 @@ class ServerThread extends Thread {
 		}
 		
 		if (line[0].toLowerCase().equals("/left")) {
-			if (line[1].startsWith("@")) {
 				synchronized(this) {
-					for(ServerThread thread : currentroom) {
-						if (thread != this && thread != null) {
-							thread.os.println("/left " + line[1]);
-							currentroom.remove(this);
-							return 1;
+					for(ServerThread user : currentroom) {
+						if (user != this && user != null) {
+							this.os.println("/left " + user.name);
+							user.os.println("/left " + this.name);
 						}
 					}
-					return 1;
+					currentroom.remove(this);
+					currentroom = new HashSet<ServerThread>();
+					currentroom.add(this);
+				}
+				return 1;
+			}
+			
+		if (line[0].toLowerCase().equals("/w")) {
+			if(currentroom != null) {
+				if (line[1].startsWith("@")) {
+					String message = this.name + " whispered to you:";
+					for (int i = 2; i<line.length; i++) {
+						message += " " + line[i];
+					}
+					synchronized(this) {
+						for(ServerThread thread : threads) {
+							if (thread.name.equals(line[1])) {
+								if (thread != this) thread.os.println(message);
+								else thread.os.println("You cannot whisper at yourself!");
+								return 1;
+							}
+						}
+						os.println("user not online, sorry!");
+						return 1;
+					}
 				}
 			}
 		}
