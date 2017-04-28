@@ -1,8 +1,5 @@
 package client;
 
-
-
-
 import java.net.*;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -37,6 +34,8 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
@@ -53,7 +52,7 @@ import javafx.scene.layout.TilePane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import sun.misc.OSEnvironment;
+//import sun.misc.OSEnvironment;
 import javafx.animation.TranslateTransition;
 import java.io.*;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
@@ -82,15 +81,9 @@ public class ChatClient extends Application {
 	private GridPane left;
 	private GridPane right;
 	
-	private ScrollPane userScroll;
-	private ScrollPane roomScroll;
-	private ScrollPane requestScroll;
+	//private ScrollPane requestScroll;
 	
-	private TilePane users;
 	private ArrayList<String> userIndexList;
-	private TilePane room;
-	private ArrayList<String> roomIndexList;
-	private TilePane requests;
 	private ArrayList<String> requestIndexList;
 	
 	private Text loginText;
@@ -98,9 +91,32 @@ public class ChatClient extends Application {
 	private TextArea chat;
 	private ScrollPane chatArea;
 
+	//userNode
+	private Pane users;
+	private Text greetingText;
+	private Label userLabel;
+	private AnchorPane userListAnchor;
+	private ScrollPane userScroll;
+	private Button messageBtn;
+	private Button AddBtn;
 	
-	private MenuItem message;
-	private MenuItem add;
+	//roomNode
+	private Pane room;
+	private ArrayList<String> roomIndexList;
+	private AnchorPane roomAnchor;
+	private ScrollPane roomScroll;
+	private Text roomText;
+	
+	//requestNode
+	private Pane requests;
+	private Text constantAtText;
+	private Label nameplate;
+	private Text chatText;
+	private Button acceptBtn;
+	private Button declineBtn;
+	
+	//private MenuItem message;
+	//private MenuItem add;
 
 	
 	private Button send;
@@ -141,19 +157,19 @@ public class ChatClient extends Application {
 			configEventHandlers();
 			
 			clientOut.println("hi");
-			left.add(new Text( "Current Room"), 0, 0);
-			left.add(roomScroll, 0, 1);
-			left.add(new Text("User List"), 0, 2);
-			left.add(userScroll, 0, 3);
+			//left.add(new Text( "Current Room"), 0, 0);
+			//left.add(roomScroll, 0, 1);
+			//left.add(new Text("User List"), 0, 2);
+			//left.add(userScroll, 0, 3);
 			
 			right.add(chat, 0, 0, 2, 1);
 			right.add(console, 0, 1, 1, 1);
 			right.add(send, 1, 1, 1, 1);
 			
 			
-			grid.add(left, 0, 0);
-			grid.add(right, 1, 0);
-			grid.add(requestScroll, 2, 0);
+			//grid.add(left, 0, 0);
+			//grid.add(right, 1, 0);
+			//grid.add(requestScroll, 2, 0);
 			
 			primaryStage.setHeight(480);
 			primaryStage.setWidth(720);
@@ -183,27 +199,27 @@ public class ChatClient extends Application {
 	private void createElements(){
 
 		grid = new GridPane();
-		left = new GridPane();
-		right = new GridPane();
+		//left = new GridPane();
+		//right = new GridPane();
 		
 		
 		userScroll = new ScrollPane();
 		roomScroll = new ScrollPane();
-		requestScroll = new ScrollPane();
+		//requestScroll = new ScrollPane();
 		
-		users = new TilePane(Orientation.HORIZONTAL);
-		users.setTileAlignment(Pos.CENTER_LEFT);
-		users.prefColumnsProperty().set(1);
+		//users = new TilePane(Orientation.HORIZONTAL);
+		//users.setTileAlignment(Pos.CENTER_LEFT);
+		//users.prefColumnsProperty().set(1);
 		userIndexList = new ArrayList<String>();
 		
-		room = new TilePane(Orientation.VERTICAL);
-		room.setTileAlignment(Pos.CENTER_LEFT);
-		room.prefColumnsProperty().set(1);
+		//room = new TilePane(Orientation.VERTICAL);
+		//room.setTileAlignment(Pos.CENTER_LEFT);
+		//room.prefColumnsProperty().set(1);
 		roomIndexList = new ArrayList<String>();
 		
-		requests = new TilePane(Orientation.VERTICAL);
-		requests.setTileAlignment(Pos.CENTER_LEFT);
-		requests.prefColumnsProperty().set(1);
+		//requests = new TilePane(Orientation.VERTICAL);
+		//requests.setTileAlignment(Pos.CENTER_LEFT);
+		//requests.prefColumnsProperty().set(1);
 		requestIndexList = new ArrayList<String>();
 		
 		chat = new TextArea();
@@ -232,6 +248,7 @@ public class ChatClient extends Application {
 		console.prefHeightProperty().bind(send.prefHeightProperty());
 		console.prefWidthProperty().bind(right.prefWidthProperty());
 		
+		/*
 		userScroll.prefHeightProperty().bind(grid.prefHeightProperty().multiply(.8));
 		userScroll.prefWidthProperty().set(200);
 		userScroll.minWidthProperty().set(200);
@@ -257,6 +274,7 @@ public class ChatClient extends Application {
 		requestScroll.setContent(requests);
 		requestScroll.setHbarPolicy(ScrollBarPolicy.NEVER);
 		requestScroll.setVbarPolicy(ScrollBarPolicy.ALWAYS);
+		*/
 		
 		chat.editableProperty().set(false);
 	}
@@ -309,20 +327,20 @@ public class ChatClient extends Application {
 	}
 	
 	private GridPane constructUserNode(String name) {
-		GridPane backplate = new GridPane();
-		backplate.setPrefHeight(110);
-		backplate.setMinHeight(110);
-		backplate.setPrefWidth(200);
-		backplate.setMinWidth(200);
+		//GridPane backplate = new GridPane();
+		//backplate.setPrefHeight(110);
+		//backplate.setMinHeight(110);
+		//backplate.setPrefWidth(200);
+		//backplate.setMinWidth(200);
 		
 		Label nameplate = new Label(name);
-		nameplate.setPrefHeight(30);
-		nameplate.setPrefWidth(180);
+		//nameplate.setPrefHeight(30);
+		//nameplate.setPrefWidth(180);
 		
-		Button message = new Button("message");
-		message.setPrefHeight(30);
-		message.setPrefWidth(80);
-		message.setOnAction(new EventHandler<ActionEvent>(){
+		//Button message = new Button("message");
+		//message.setPrefHeight(30);
+		//message.setPrefWidth(80);
+		messageBtn.setOnAction(new EventHandler<ActionEvent>(){
 			public void handle(ActionEvent e){
 				try {
 					if(!roomIndexList.contains(name)) streamOut.println("/message " + name);
@@ -332,10 +350,10 @@ public class ChatClient extends Application {
 			}
 		});
 		
-		Button add = new Button("add");
-		add.setPrefHeight(30);
-		add.setPrefWidth(80);
-		add.setOnAction(new EventHandler<ActionEvent>(){
+		//Button add = new Button("add");
+		//add.setPrefHeight(30);
+		//add.setPrefWidth(80);
+		AddBtn.setOnAction(new EventHandler<ActionEvent>(){
 			public void handle(ActionEvent e){
 				try {
 					if(!roomIndexList.contains(name)) streamOut.println("/add " + name);
@@ -345,14 +363,15 @@ public class ChatClient extends Application {
 			}
 		});
 		
-		backplate.add(nameplate, 0, 0, 2, 1);
-		backplate.add(message, 0, 1);
-		backplate.add(add, 1, 1);
-		return backplate;
+		//backplate.add(nameplate, 0, 0, 2, 1);
+		//backplate.add(message, 0, 1);
+		//backplate.add(add, 1, 1);
+		//return backplate;
 		
 	}
 	
-	private GridPane constructRoomNode(String string) {
+	/*
+	 private GridPane constructRoomNode(String string) {
 		GridPane backplate = new GridPane();
 		backplate.setPrefHeight(110);
 		backplate.setMinHeight(110);
@@ -366,50 +385,52 @@ public class ChatClient extends Application {
 		
 		return backplate;
 	}
+	*/
 
-	private GridPane constructRequestNode(String name) {
-		GridPane backplate = new GridPane();
-		backplate.setPrefHeight(110);
-		backplate.setMinHeight(110);
-		backplate.setPrefWidth(200);
-		backplate.setMinWidth(200);
+	private GridPane constructRequestNode(String split) {
+		//GridPane backplate = new GridPane();
+		//backplate.setPrefHeight(110);
+		//backplate.setMinHeight(110);
+		//backplate.setPrefWidth(200);
+		//backplate.setMinWidth(200);
 		
-		Label nameplate = new Label("Room Invite From: " + name);
-		nameplate.setPrefHeight(30);
-		nameplate.setPrefWidth(180);
+		//how to update string for label???
+		nameplate.textProperty().bind(split);
+		//nameplate.setPrefHeight(30);
+		//nameplate.setPrefWidth(180);
 		
-		Button message = new Button("accept");
-		message.setPrefHeight(30);
-		message.setPrefWidth(80);
-		message.setOnAction(new EventHandler<ActionEvent>(){
+		//Button message = new Button("accept");
+		//message.setPrefHeight(30);
+		//message.setPrefWidth(80);
+		acceptBtn.setOnAction(new EventHandler<ActionEvent>(){
 			public void handle(ActionEvent e){
 				try {
-					streamOut.println("/accept " + name);
-					removeRequest(name);
+					streamOut.println("/accept " + split);
+					removeRequest(split);
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
 			}
 		});
 		
-		Button add = new Button("decline");
-		add.setPrefHeight(30);
-		add.setPrefWidth(80);
-		add.setOnAction(new EventHandler<ActionEvent>(){
+		//Button add = new Button("decline");
+		//add.setPrefHeight(30);
+		//add.setPrefWidth(80);
+		declineBtn.setOnAction(new EventHandler<ActionEvent>(){
 			public void handle(ActionEvent e){
 				try {
-					streamOut.println("/decline " + name);
-					removeRequest(name);
+					streamOut.println("/decline " + split);
+					removeRequest(split);
 				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
 			}
 		});
 		
-		backplate.add(nameplate, 0, 0, 2, 1);
-		backplate.add(message, 0, 1);
-		backplate.add(add, 1, 1);
-		return backplate;
+		//backplate.add(nameplate, 0, 0, 2, 1);
+		//backplate.add(message, 0, 1);
+		//backplate.add(add, 1, 1);
+		//return backplate;
 		
 	}
 	
@@ -444,10 +465,10 @@ public class ChatClient extends Application {
 		});
 	}
 
-	public void removeRequest(String string) {
+	public void removeRequest(String split) {
 		Platform.runLater(new Runnable() {
 	        public void run() {
-	        	int requestIndex = requestIndexList.indexOf(string);
+	        	int requestIndex = requestIndexList.indexOf(split);
 	        	if (requestIndex >= 0) requests.getChildren().remove(requestIndex);
 	        	requestIndexList.remove(requestIndex);
 	        }
